@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tedde 3D • Calculadora de Precificação</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --border:#e6e8f0;
+      --text:#111827;
+      --muted:#6b7280;
+      --accent:#2d3cff;
+      --okbg:#ecfdf5; --okbd:#a7f3d0; --oktx:#065f46;
+      --midbg:#fff7ed; --midbd:#fed7aa; --midtx:#9a3412;
+      --badbg:#fef2f2; --badbd:#fecaca; --badtx:#991b1b;
+      --shadow: 0 8px 24px rgba(17,24,39,.06);
+      --radius:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:20;
+      background:rgba(246,247,251,.92);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand{ display:flex; flex-direction:column; line-height:1.1; }
+    .brand .name{ font-weight:950; font-size:18px; letter-spacing:.2px; }
+    .brand .tag{ font-size:12px; color:var(--muted); }
+
+    .btn{
+      border:1px solid var(--border);
+      background:var(--card);
+      padding:10px 12px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.03);
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(45,60,255,.25);
+      box-shadow: 0 8px 22px rgba(45,60,255,.08);
+    }
+    .btn.danger{
+      border-color: rgba(220,38,38,.25);
+    }
+    .btn.small{ padding:8px 10px; border-radius:12px; font-weight:800; font-size:13px; }
+    .btn .dot{
+      width:10px; height:10px; border-radius:999px; background:var(--accent);
+      box-shadow: 0 0 0 3px rgba(45,60,255,.12);
+    }
+
+    .wrap{ max-width: 980px; margin: 0 auto; padding: 16px 14px 30px; }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .section-title{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:950;
+      margin: 2px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .inputs{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+    @media (min-width: 680px){
+      .inputs{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .field{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background: #fbfbff;
+    }
+    .field label{ font-weight:950; font-size:14px; }
+    .field small{ display:block; font-weight:700; color:var(--muted); margin-top:2px; font-size:12px; }
+    input[type="number"], input[type="text"]{
+      width: 140px;
+      padding: 10px 10px;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      font-size:16px;
+      font-weight:900;
+      text-align:right;
+      background:#fff;
+    }
+    input[type="text"]{
+      width:100%;
+      text-align:left;
+      font-weight:800;
+      font-size:15px;
+    }
+    .field.text{
+      align-items:flex-start;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    @media (min-width: 860px){
+      .grid2{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .list{ display:flex; flex-direction:column; gap:10px; }
+    .row{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background:#fff;
+    }
+    .rowhead{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom:8px;
+    }
+    .rowhead .lvl{ font-weight:950; font-size:15px; }
+    .rowhead .charge{ font-weight:950; font-size:16px; color:var(--accent); }
+    .metrics{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:8px;
+    }
+    .metric{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background:#fbfbff;
+    }
+    .metric .k{ font-size:12px; color:var(--muted); font-weight:900; }
+    .metric .v{ margin-top:4px; font-size:14px; font-weight:950; }
+    .metrics.two{ grid-template-columns: 1fr 1fr; }
+
+    .opinion{
+      margin-top:12px;
+      border-radius: var(--radius);
+      padding: 12px;
+      border:1px solid var(--border);
+      background:#fff;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .badge{
+      width:40px; height:40px; border-radius: 14px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:950;
+      border:1px solid transparent;
+      flex: 0 0 40px;
+    }
+    .opinion .txt strong{ display:block; font-size:14px; margin-bottom:4px; }
+    .opinion .txt span{ color:var(--muted); font-size:12px; line-height:1.35; display:block; }
+
+    .badge.ok{ background:var(--okbg); border-color:var(--okbd); color:var(--oktx); }
+    .badge.mid{ background:var(--midbg); border-color:var(--midbd); color:var(--midtx); }
+    .badge.bad{ background:var(--badbg); border-color:var(--badbd); color:var(--badtx); }
+
+    .footerNote{ margin-top:10px; color:var(--muted); font-size:12px; line-height:1.35; }
+
+    /* Drawer (menu lateral) */
+    .drawer-backdrop{
+      position:fixed; inset:0;
+      background:rgba(17,24,39,.35);
+      z-index:40;
+      display:none;
+    }
+    .drawer{
+      position:fixed; top:0; right:0; height:100vh; width:min(420px, 92vw);
+      background:var(--card);
+      border-left:1px solid var(--border);
+      box-shadow: -10px 0 30px rgba(0,0,0,.12);
+      z-index:50;
+      transform: translateX(105%);
+      transition: transform .22s ease;
+      display:flex; flex-direction:column;
+    }
+    .drawer.open{ transform: translateX(0); }
+    .drawer-backdrop.open{ display:block; }
+    .drawer header{
+      background:var(--card);
+      border-bottom:1px solid var(--border);
+      padding: 14px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .drawer header .title{ font-weight:950; }
+    .drawer .content{ padding:14px; overflow:auto; }
+    .drawer .group{ margin-bottom: 14px; }
+    .drawer .group h3{
+      margin:0 0 8px; font-size:12px; color:var(--muted); font-weight:950;
+      text-transform: uppercase; letter-spacing: .6px;
+    }
+    .drawer .line{
+      display:grid; grid-template-columns: 1fr 140px; gap:10px;
+      align-items:center;
+      padding: 10px 0;
+      border-bottom:1px dashed #eef0f6;
+    }
+    .drawer .line:last-child{ border-bottom:none; }
+    .drawer .line label{ font-weight:900; font-size:13px; }
+    .drawer small{ color:var(--muted); font-size:12px; display:block; margin-top:2px; }
+    .drawer input[type="number"]{ width:100%; text-align:right; }
+    .drawer .hint{
+      border:1px solid var(--border);
+      background:#fbfbff;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+      margin-top:10px;
+    }
+
+    /* Biblioteca */
+    .libHeader{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom:10px;
+      flex-wrap: wrap;
+    }
+    .libControls{ display:flex; gap:8px; flex-wrap:wrap; }
+    .libItem{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .libTop{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    }
+    .libName{ font-weight:950; }
+    .libMeta{ color:var(--muted); font-size:12px; }
+    .libBtns{ display:flex; gap:8px; flex-wrap:wrap; }
+    .pill{
+      display:inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background:#fbfbff;
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      gap:8px;
+      align-items:center;
+      width: fit-content;
+    }
+    .pill b{ color:var(--text); }
+    .toast{
+      position:fixed;
+      left:50%;
+      transform: translateX(-50%);
+      bottom:18px;
+      background:#111827;
+      color:#fff;
+      padding:10px 12px;
+      border-radius: 14px;
+      font-size:13px;
+      font-weight:800;
+      box-shadow: 0 14px 30px rgba(0,0,0,.22);
+      z-index:80;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-4px); }
+    textarea.export{
+      width:100%;
+      min-height: 140px;
+      padding: 10px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;
+      line-height:1.35;
+      resize: vertical;
+      background:#fbfbff;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="topbar">
+    <div class="brand">
+      <div class="name">Tedde 3D</div>
+      <div class="tag">Calculadora de preço • Marketplace e Presencial</div>
+    </div>
+    <button class="btn" id="openSettings" type="button" aria-label="Abrir configurações">
+      <span class="dot"></span>
+      Configurações
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Inputs principais -->
+  <div class="card">
+    <div class="section-title">Dados do produto</div>
+
+    <div class="field text" style="margin-bottom:10px;">
+      <div>
+        <label for="productName">Nome do produto</label>
+        <small>Ex.: Suporte para controle / Chaveiro / Peça X</small>
+      </div>
+      <input id="productName" type="text" placeholder="Digite o nome do produto..." />
+    </div>
+
+    <div class="inputs">
+      <div class="field">
+        <div>
+          <label for="grams">Peso em gramas</label>
+          <small>Quantidade de filamento usada</small>
+        </div>
+        <input id="grams" type="number" step="0.1" value="80" inputmode="decimal" />
+      </div>
+
+      <div class="field">
+        <div>
+          <label for="hours">Tempo de impressão (h)</label>
+          <small>Até 2h sem custo extra</small>
+        </div>
+        <input id="hours" type="number" step="0.1" value="2" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="footerNote" id="costSummary">—</div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+      <button class="btn primary" id="savePricing" type="button">Salvar precificação</button>
+      <button class="btn" id="clearName" type="button">Limpar nome</button>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="grid2">
+    <div class="card">
+      <div class="section-title">Venda no marketplace</div>
+      <div class="list" id="marketplaceList"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Venda presencial</div>
+      <div class="list" id="presencialList"></div>
+    </div>
+  </div>
+
+  <div class="opinion" id="opinionBox" style="margin-top:12px;">
+    <div class="badge ok" id="opBadge">✓</div>
+    <div class="txt">
+      <strong id="opTitle">—</strong>
+      <span id="opDesc">—</span>
+    </div>
+  </div>
+
+  <!-- Biblioteca -->
+  <div class="card" style="margin-top:12px;">
+    <div class="libHeader">
+      <div>
+        <div class="section-title" style="margin-bottom:6px;">Biblioteca</div>
+        <div class="muted" id="libCount">—</div>
+      </div>
+      <div class="libControls">
+        <button class="btn small" id="exportJson" type="button">Exportar JSON</button>
+        <button class="btn small danger" id="clearLibrary" type="button">Limpar biblioteca</button>
+      </div>
+    </div>
+
+    <div id="exportBox" style="display:none; margin-bottom:10px;">
+      <div class="muted" style="margin-bottom:6px;">
+        Copie e guarde este JSON como backup (ou cole em outro celular na função “Importar” quando você quiser).
+      </div>
+      <textarea class="export" id="exportArea" readonly></textarea>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <button class="btn small" id="copyExport" type="button">Copiar JSON</button>
+        <button class="btn small" id="closeExport" type="button">Fechar</button>
+      </div>
+    </div>
+
+    <div class="list" id="libraryList"></div>
+  </div>
+</div>
+
+<!-- Drawer (configurações) -->
+<div class="drawer-backdrop" id="backdrop" aria-hidden="true"></div>
+<aside class="drawer" id="drawer" aria-label="Configurações">
+  <header>
+    <div class="title">Configurações</div>
+    <button class="btn" id="closeSettings" type="button">Fechar</button>
+  </header>
+
+  <div class="content">
+    <div class="group">
+      <h3>Custos</h3>
+
+      <div class="line">
+        <div>
+          <label for="kgPrice">Custo do filamento (R$/kg)</label>
+          <small>Ex.: 90, 110, 130...</small>
+        </div>
+        <input id="kgPrice" type="number" step="0.01" value="90.00" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div><label for="packaging">Embalagem (R$)</label></div>
+        <input id="packaging" type="number" step="0.01" value="1.50" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div><label for="otherCosts">Demais custos (R$)</label></div>
+        <input id="otherCosts" type="number" step="0.01" value="1.00" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Tempo</h3>
+
+      <div class="line">
+        <div>
+          <label for="freeHours">Horas sem adição</label>
+          <small>Até aqui, tempo não acrescenta custo</small>
+        </div>
+        <input id="freeHours" type="number" step="0.1" value="2" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div>
+          <label for="extraPerHour">R$ por hora adicional</label>
+          <small>Aplica somente acima das horas grátis</small>
+        </div>
+        <input id="extraPerHour" type="number" step="0.01" value="2.00" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Marketplace</h3>
+
+      <div class="line">
+        <div><label for="mpFixed">Taxa fixa (R$)</label></div>
+        <input id="mpFixed" type="number" step="0.01" value="4.00" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div>
+          <label for="mpPercent">Taxa percentual (%)</label>
+          <small>Ex.: 18,5</small>
+        </div>
+        <input id="mpPercent" type="number" step="0.01" value="18.5" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="group">
+      <h3>Margens (níveis)</h3>
+
+      <div class="line">
+        <div>
+          <label for="multMin">Mínimo (multiplicador do custo)</label>
+          <small>2 = custo + 1x de lucro</small>
+        </div>
+        <input id="multMin" type="number" step="0.1" value="2" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div>
+          <label for="multGood">Bom (multiplicador do custo)</label>
+          <small>3 = custo + 2x de lucro</small>
+        </div>
+        <input id="multGood" type="number" step="0.1" value="3" inputmode="decimal" />
+      </div>
+
+      <div class="line">
+        <div>
+          <label for="multExc">Excelente (multiplicador do custo)</label>
+          <small>4 = custo + 3x de lucro</small>
+        </div>
+        <input id="multExc" type="number" step="0.1" value="4" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="hint">
+      <b>Como a conta funciona:</b><br>
+      1) Custo base = filamento + embalagem + demais custos + (horas extras × R$/h).<br>
+      2) Presencial: preço = custo base × multiplicador.<br>
+      3) Marketplace: preço anunciado ajustado para sobrar o mesmo líquido após taxas.<br>
+      4) Lucro real = líquido recebido − custo base.
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast">Salvo!</div>
+
+<script>
+  // ===== Utils =====
+  const el = (id) => document.getElementById(id);
+  const fmtBRL = (n) => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(n);
+  const fmt1 = (n) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(n);
+  function num(v){ const x = Number(v); return Number.isFinite(x) ? x : 0; }
+  function nowIso(){ return new Date().toISOString(); }
+  function brDateTime(iso){
+    const d = new Date(iso);
+    return d.toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  }
+  function showToast(msg){
+    const t = el('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1300);
+  }
+  function uid(){
+    // id simples e suficiente para biblioteca local
+    return Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
+  }
+
+  // ===== Pricing math =====
+  function calcBaseCost(i){
+    const costPerGram = i.kgPrice / 1000;
+    const filament = i.grams * costPerGram;
+    const extraHours = Math.max(0, i.hours - i.freeHours);
+    const timeCost = extraHours * i.extraPerHour;
+    const baseCost = filament + i.packaging + i.otherCosts + timeCost;
+    return { filament, timeCost, extraHours, baseCost, costPerGram };
+  }
+  function marketplacePriceForDesiredNet(desiredNet, mpFixed, mpPercent){
+    const den = (1 - mpPercent);
+    if (den <= 0) return Infinity;
+    return (desiredNet + mpFixed) / den;
+  }
+  function marketplaceNet(price, mpFixed, mpPercent){
+    return (1 - mpPercent) * price - mpFixed;
+  }
+
+  // ===== Read / write inputs =====
+  function readInputs(){
+    return {
+      productName: (el('productName').value || '').trim(),
+      grams: num(el('grams').value),
+      hours: num(el('hours').value),
+
+      kgPrice: num(el('kgPrice').value),
+      packaging: num(el('packaging').value),
+      otherCosts: num(el('otherCosts').value),
+
+      freeHours: num(el('freeHours').value),
+      extraPerHour: num(el('extraPerHour').value),
+
+      mpFixed: num(el('mpFixed').value),
+      mpPercent: num(el('mpPercent').value) / 100,
+
+      multMin: num(el('multMin').value),
+      multGood: num(el('multGood').value),
+      multExc: num(el('multExc').value),
+    };
+  }
+  function applyInputs(i){
+    el('productName').value = i.productName || '';
+    el('grams').value = (i.grams ?? 0);
+    el('hours').value = (i.hours ?? 0);
+
+    el('kgPrice').value = (i.kgPrice ?? 0);
+    el('packaging').value = (i.packaging ?? 0);
+    el('otherCosts').value = (i.otherCosts ?? 0);
+
+    el('freeHours').value = (i.freeHours ?? 0);
+    el('extraPerHour').value = (i.extraPerHour ?? 0);
+
+    el('mpFixed').value = (i.mpFixed ?? 0);
+    el('mpPercent').value = ((i.mpPercent ?? 0) * 100);
+
+    el('multMin').value = (i.multMin ?? 2);
+    el('multGood').value = (i.multGood ?? 3);
+    el('multExc').value = (i.multExc ?? 4);
+  }
+
+  // ===== Rendering =====
+  function renderMarketRow({level, charge, net, profit}){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="rowhead">
+        <div class="lvl">${level}</div>
+        <div class="charge">${fmtBRL(charge)}</div>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="k">Líquido</div>
+          <div class="v">${fmtBRL(net)}</div>
+        </div>
+        <div class="metric">
+          <div class="k">Lucro</div>
+          <div class="v">${fmtBRL(profit)}</div>
+        </div>
+        <div class="metric">
+          <div class="k">Cobrar</div>
+          <div class="v">${fmtBRL(charge)}</div>
+        </div>
+      </div>
+    `;
+    return row;
+  }
+
+  function renderPresRow({level, charge, profit}){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div class="rowhead">
+        <div class="lvl">${level}</div>
+        <div class="charge">${fmtBRL(charge)}</div>
+      </div>
+      <div class="metrics two">
+        <div class="metric">
+          <div class="k">Lucro</div>
+          <div class="v">${fmtBRL(profit)}</div>
+        </div>
+        <div class="metric">
+          <div class="k">Cobrar</div>
+          <div class="v">${fmtBRL(charge)}</div>
+        </div>
+      </div>
+    `;
+    return row;
+  }
+
+  function setOpinion(kind, title, desc){
+    const badge = el('opBadge');
+    badge.className = 'badge ' + kind;
+    badge.textContent = (kind === 'ok') ? '✓' : (kind === 'mid') ? '!' : '✕';
+    el('opTitle').textContent = title;
+    el('opDesc').textContent = desc;
+  }
+
+  // ===== Library (LocalStorage) =====
+  const LS_KEY = 'tedde3d_pricing_library_v1';
+
+  function loadLibrary(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){
+      return [];
+    }
+  }
+  function saveLibrary(arr){
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  }
+
+  function addToLibrary(entry){
+    const lib = loadLibrary();
+    lib.unshift(entry); // mais recente primeiro
+    saveLibrary(lib);
+    renderLibrary();
+  }
+
+  function deleteFromLibrary(id){
+    const lib = loadLibrary().filter(x => x.id !== id);
+    saveLibrary(lib);
+    renderLibrary();
+  }
+
+  function clearLibrary(){
+    saveLibrary([]);
+    renderLibrary();
+  }
+
+  function exportLibraryJSON(){
+    const lib = loadLibrary();
+    return JSON.stringify(lib, null, 2);
+  }
+
+  function renderLibrary(){
+    const lib = loadLibrary();
+    el('libCount').textContent = lib.length ? `${lib.length} item(ns) salvos` : 'Nenhuma precificação salva ainda.';
+    const list = el('libraryList');
+    list.innerHTML = '';
+
+    if (!lib.length){
+      const empty = document.createElement('div');
+      empty.className = 'muted';
+      empty.style.padding = '6px 2px';
+      empty.textContent = 'Dica: preencha peso/tempo, clique em “Salvar precificação” e crie sua biblioteca.';
+      list.appendChild(empty);
+      return;
+    }
+
+    lib.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'libItem';
+
+      const name = item.productName || '(Sem nome)';
+      const dt = brDateTime(item.createdAt);
+
+      // resumo rápido com “Bom”
+      const mpGood = item.results?.marketplace?.good;
+      const prGood = item.results?.presencial?.good;
+
+      const mpSummary = mpGood
+        ? `${fmtBRL(mpGood.charge)} • lucro ${fmtBRL(mpGood.profit)}`
+        : '—';
+
+      const prSummary = prGood
+        ? `${fmtBRL(prGood.charge)} • lucro ${fmtBRL(prGood.profit)}`
+        : '—';
+
+      div.innerHTML = `
+        <div class="libTop">
+          <div>
+            <div class="libName">${escapeHtml(name)}</div>
+            <div class="libMeta">${dt} • ${fmt1(item.inputs?.grams ?? 0)} g • ${fmt1(item.inputs?.hours ?? 0)} h</div>
+          </div>
+          <div class="libBtns">
+            <button class="btn small" data-act="load" data-id="${item.id}">Carregar</button>
+            <button class="btn small danger" data-act="del" data-id="${item.id}">Excluir</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="pill">Marketplace (Bom): <b>${mpSummary}</b></span>
+          <span class="pill">Presencial (Bom): <b>${prSummary}</b></span>
+          <span class="pill">Custo base: <b>${fmtBRL(item.results?.baseCost ?? 0)}</b></span>
+        </div>
+      `;
+
+      // handlers
+      div.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const act = btn.getAttribute('data-act');
+          const id = btn.getAttribute('data-id');
+          if (act === 'del'){
+            if (confirm('Excluir esta precificação?')) {
+              deleteFromLibrary(id);
+              showToast('Excluído');
+            }
+          }
+          if (act === 'load'){
+            const libNow = loadLibrary();
+            const found = libNow.find(x => x.id === id);
+            if (found){
+              applyInputs(found.inputs);
+              calc();
+              showToast('Carregado');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        });
+      });
+
+      list.appendChild(div);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+  }
+
+  // ===== Main calc =====
+  function calc(){
+    const i = readInputs();
+    const { filament, timeCost, extraHours, baseCost, costPerGram } = calcBaseCost(i);
+
+    // níveis
+    const levels = [
+      { key: 'min', label: 'Mínimo', mult: i.multMin },
+      { key: 'good', label: 'Bom', mult: i.multGood },
+      { key: 'exc', label: 'Excelente', mult: i.multExc },
+    ];
+
+    // resumo
+    el('costSummary').innerHTML = `
+      Custo base: <b>${fmtBRL(baseCost)}</b> • Filamento: ${fmtBRL(filament)} (${fmt1(i.grams)} g × ${fmtBRL(costPerGram)}/g)
+      • Tempo: ${fmtBRL(timeCost)} ${extraHours > 0 ? `(${fmt1(extraHours)}h extra × ${fmtBRL(i.extraPerHour)}/h)` : `(até ${fmt1(i.freeHours)}h sem custo)`}
+    `;
+
+    // render marketplace/presencial e guardar resultados atuais (para salvar na biblioteca)
+    const mpList = el('marketplaceList');
+    const prList = el('presencialList');
+    mpList.innerHTML = '';
+    prList.innerHTML = '';
+
+    const currentResults = {
+      baseCost,
+      marketplace: {},
+      presencial: {}
+    };
+
+    let mpGoodProfit = 0;
+
+    for (const lv of levels){
+      const desiredNet = baseCost * lv.mult; // líquido desejado
+      const mpCharge = marketplacePriceForDesiredNet(desiredNet, i.mpFixed, i.mpPercent);
+      const mpNet = marketplaceNet(mpCharge, i.mpFixed, i.mpPercent);
+      const mpProfit = mpNet - baseCost;
+
+      if (lv.key === 'good') mpGoodProfit = mpProfit;
+
+      mpList.appendChild(renderMarketRow({
+        level: `${lv.label} — cobrar`,
+        charge: mpCharge,
+        net: mpNet,
+        profit: mpProfit
+      }));
+
+      const presCharge = baseCost * lv.mult;
+      const presProfit = presCharge - baseCost;
+      prList.appendChild(renderPresRow({
+        level: `${lv.label} — cobrar`,
+        charge: presCharge,
+        profit: presProfit
+      }));
+
+      currentResults.marketplace[lv.key] = { charge: mpCharge, net: mpNet, profit: mpProfit };
+      currentResults.presencial[lv.key] = { charge: presCharge, profit: presProfit };
+    }
+
+    // Parecer: baseado no "Bom" do marketplace
+    const ratio = baseCost > 0 ? (mpGoodProfit / baseCost) : 0;
+
+    if (ratio >= 1){
+      setOpinion('ok','Rentável','No marketplace, no nível “Bom”, o lucro real está forte em relação ao custo. Ótimo para manter produção e reinvestir.');
+    } else if (ratio >= 0.5){
+      setOpinion('mid','Margem aceitável','No marketplace, no nível “Bom”, o lucro real é razoável. Pode funcionar, mas exige boa apresentação e diferencial.');
+    } else {
+      setOpinion('bad','Inviável para marketplace em mercado competitivo','No nível “Bom”, o lucro real fica baixo em relação ao custo. Em concorrência forte, tende a não compensar.');
+    }
+
+    // guardar resultados no window para botão salvar
+    window.__TEDDE_LAST_RESULTS__ = currentResults;
+  }
+
+  // ===== Drawer controls =====
+  const drawer = el('drawer');
+  const backdrop = el('backdrop');
+  function openDrawer(){
+    drawer.classList.add('open');
+    backdrop.classList.add('open');
+    backdrop.setAttribute('aria-hidden', 'false');
+  }
+  function closeDrawer(){
+    drawer.classList.remove('open');
+    backdrop.classList.remove('open');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+  el('openSettings').addEventListener('click', openDrawer);
+  el('closeSettings').addEventListener('click', closeDrawer);
+  backdrop.addEventListener('click', closeDrawer);
+
+  // ===== Save pricing =====
+  el('savePricing').addEventListener('click', () => {
+    const inputs = readInputs();
+    const results = window.__TEDDE_LAST_RESULTS__;
+    const name = (inputs.productName || '').trim();
+
+    if (!name){
+      alert('Digite o nome do produto antes de salvar.');
+      el('productName').focus();
+      return;
+    }
+    if (!results || !Number.isFinite(results.baseCost)){
+      alert('Não foi possível salvar (resultados inválidos).');
+      return;
+    }
+
+    const entry = {
+      id: uid(),
+      createdAt: nowIso(),
+      productName: name,
+      inputs,
+      results
+    };
+    addToLibrary(entry);
+    showToast('Salvo na biblioteca');
+  });
+
+  el('clearName').addEventListener('click', () => {
+    el('productName').value = '';
+    el('productName').focus();
+  });
+
+  // ===== Export JSON =====
+  el('exportJson').addEventListener('click', () => {
+    const json = exportLibraryJSON();
+    el('exportArea').value = json;
+    el('exportBox').style.display = 'block';
+    showToast('JSON gerado');
+  });
+  el('closeExport').addEventListener('click', () => {
+    el('exportBox').style.display = 'none';
+  });
+  el('copyExport').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(el('exportArea').value);
+      showToast('Copiado');
+    }catch(e){
+      // fallback
+      el('exportArea').select();
+      document.execCommand('copy');
+      showToast('Copiado');
+    }
+  });
+
+  // ===== Clear library =====
+  el('clearLibrary').addEventListener('click', () => {
+    if (confirm('Tem certeza? Isso apaga toda a biblioteca deste celular.')){
+      clearLibrary();
+      showToast('Biblioteca limpa');
+    }
+  });
+
+  // recalcular em qualquer input
+  document.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', calc);
+    inp.addEventListener('change', calc);
+  });
+
+  // init
+  calc();
+  renderLibrary();
+</script>
+</body>
+</html>
